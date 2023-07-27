@@ -263,6 +263,7 @@ export
     eigenvector_centrality,
     stress_centrality,
     radiality_centrality,
+    laplacian_centrality,
 
     # spectral
     adjacency_matrix,
@@ -512,6 +513,7 @@ include("centrality/closeness.jl")
 include("centrality/stress.jl")
 include("centrality/degree.jl")
 include("centrality/katz.jl")
+include("centrality/laplacian.jl")
 include("centrality/pagerank.jl")
 include("centrality/eigenvector.jl")
 include("centrality/radiality.jl")

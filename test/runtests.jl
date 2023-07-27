@@ -133,6 +133,7 @@ tests = [
     "centrality/eigenvector",
     "centrality/stress",
     "centrality/radiality",
+    "centrality/laplacian",
     "utils",
     "deprecations",
     "spanningtrees/boruvka",
