@@ -10,7 +10,10 @@ function energy(lap_matrix::Matrix)
 end
 
 function _laplacian_vertex_centrality(
-    lap_matrix::SparseMatrixCSC, vertex_index::Integer, full_energy::Number, normalized::Bool
+    lap_matrix::SparseMatrixCSC,
+    vertex_index::Integer,
+    full_energy::Number,
+    normalized::Bool,
 )
     vertex_removed_lap_matrix = lap_matrix[1:end .!= vertex_index, 1:end .!= vertex_index]
     new_diag = diag(lap_matrix) .- abs.(lap_matrix[:, vertex_index])
@@ -91,4 +94,36 @@ function laplacian_centrality(
     end
 
     return laplacian_centralities
+end
+
+"""
+    energy_difference(g, weights, adjacency_list)
+
+Computes the difference between Laplacian energy of a graph and that of its subgraph removed from a given vertex v.
+
+The computation involves the count of 2-walks containing v:
+Closed 2-walks nwc2, non-closed 2-walks containing vertex v as middle point nwm2 and as extreme point nwe2.
+
+"""
+function energy_difference(
+    vertex_index::Integer, weights::Matrix, adjacency_list::Vector{Vector{Integer}}
+)
+    v_neighbors = adjacency_list[vertex_index]
+
+    num_neighbors = length(v_neighbors)
+
+    nwc2 = sum([weights[vertex_index, i]^2 for i in v_neighbors])
+    nwm2 = sum([
+        weights[vertex_index, i] * weights[vertex_index, j] for i in
+                                                                range(1, num_neighbors) for
+        j in range(1, i)
+    ])
+    nwe2 = sum([
+        sum([
+            weights[vertex_index, y] * weights[y, z] for
+            z in adjacency_list[y] if z !== vertex_index
+        ]) for y in v_neighbors
+    ])
+
+    return 4 * nwc2 + 2 * nwe2 + 2 * nwm2
 end
