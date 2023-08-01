@@ -55,18 +55,18 @@ Laplacian centrality: A new centrality measure for weighted networks.
 ```jldoctest
 julia> using Graphs
 
-julia> laplacian_centrality(star_graph(3))
+julia> round.(laplacian_centrality(star_graph(3)), digits=1)
 3-element Vector{Float64}:
  1.0
  0.6
  0.6
 
-julia> laplacian_centrality(path_graph(4))
+julia> round.(laplacian_centrality(path_graph(4)), digits=3)
 4-element Vector{Float64}:
- 0.3749999999999997       
- 0.7499999999999999       
- 0.7499999999999999       
- 0.3749999999999997
+ 0.375     
+ 0.75       
+ 0.75       
+ 0.375
 ```
 """
 function laplacian_centrality(
@@ -87,9 +87,16 @@ function laplacian_centrality(
 
     laplacian_centralities = zeros(length(vs))
 
+    edge_weights = weights(g)
+
+    adjacency_list = SimpleGraphs.adj(SimpleGraph(g))
+
     for (index, vertex_index) in enumerate(vs)
-        laplacian_centralities[index] = _laplacian_vertex_centrality(
-            lap_matrix, vertex_index, full_energy, normalized
+        # laplacian_centralities[index] = _laplacian_vertex_centrality(
+        #     lap_matrix, vertex_index, full_energy, normalized
+        # )
+        laplacian_centralities[index] = _laplacian_vertex_centrality_v2(
+            vertex_index, edge_weights, adjacency_list, full_energy, normalized
         )
     end
 
@@ -105,9 +112,7 @@ The computation involves the count of 2-walks containing v:
 Closed 2-walks nwc2, non-closed 2-walks containing vertex v as middle point nwm2 and as extreme point nwe2.
 
 """
-function energy_difference(
-    vertex_index::Integer, weights::Matrix, adjacency_list::Vector{Vector{Integer}}
-)
+function energy_difference(vertex_index::Integer, weights::AbstractMatrix, adjacency_list)
     v_neighbors = adjacency_list[vertex_index]
 
     num_neighbors = length(v_neighbors)
@@ -116,7 +121,7 @@ function energy_difference(
     nwm2 = sum([
         weights[vertex_index, i] * weights[vertex_index, j] for i in
                                                                 range(1, num_neighbors) for
-        j in range(1, i)
+        j in range(i + 1, num_neighbors)
     ])
     nwe2 = sum([
         sum([
@@ -126,4 +131,20 @@ function energy_difference(
     ])
 
     return 4 * nwc2 + 2 * nwe2 + 2 * nwm2
+end
+
+function _laplacian_vertex_centrality_v2(
+    vertex_index::Integer,
+    weights::AbstractMatrix,
+    adjacency_list,
+    full_energy::Number,
+    normalized::Bool,
+)
+    lapl_cent = energy_difference(vertex_index, weights, adjacency_list)
+
+    if normalized
+        lapl_cent = lapl_cent / full_energy
+    end
+
+    return lapl_cent
 end
